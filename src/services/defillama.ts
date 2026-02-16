@@ -1,6 +1,7 @@
-import type { Pool, LlamaResponse } from "../types/index.js";
+import type { Pool, LlamaPoolsResponse, LlamaBorrowEntry } from "../types/index.js";
 
 const POOLS_URL = "https://yields.llama.fi/pools";
+const LEND_BORROW_URL = "https://yields.llama.fi/lendBorrow";
 
 const SUPPORTED_CHAINS = new Set([
   "ethereum",
@@ -9,27 +10,55 @@ const SUPPORTED_CHAINS = new Set([
   "avalanche",
   "sui",
   "aptos",
+  "bsc",
+  "base",
+  "hyperliquid",
+  "arbitrum",
 ]);
 
-const LENDING_CATEGORIES = new Set(["lending", "cdp"]);
+/** Normalize chain names from the API to a consistent lowercase key. */
+function normalizeChain(raw: string): string {
+  const lower = raw.toLowerCase().trim();
+  if (lower === "binance" || lower === "bsc") return "bsc";
+  if (lower === "hyperliquid l1" || lower === "hyperliquid") return "hyperliquid";
+  if (lower === "avax" || lower === "avalanche") return "avalanche";
+  return lower;
+}
 
-/** Fetches all lending pools for supported chains from DeFiLlama. */
+/**
+ * Fetches lending pools by joining /pools and /lendBorrow endpoints.
+ * A pool is considered a lending pool if it appears in /lendBorrow.
+ */
 export async function fetchLendingPools(): Promise<Pool[]> {
-  const response = await fetch(POOLS_URL);
-  if (!response.ok) {
-    throw new Error(`DeFiLlama API returned ${response.status}`);
+  const [poolsRes, borrowRes] = await Promise.all([
+    fetch(POOLS_URL),
+    fetch(LEND_BORROW_URL),
+  ]);
+
+  if (!poolsRes.ok) throw new Error(`DeFiLlama /pools returned ${poolsRes.status}`);
+  if (!borrowRes.ok) throw new Error(`DeFiLlama /lendBorrow returned ${borrowRes.status}`);
+
+  const poolsData: LlamaPoolsResponse = await poolsRes.json();
+  const borrowData: LlamaBorrowEntry[] = await borrowRes.json();
+
+  // Build a lookup map from pool ID → borrow data
+  const borrowMap = new Map<string, LlamaBorrowEntry>();
+  for (const b of borrowData) {
+    borrowMap.set(b.pool, b);
   }
 
-  const result: LlamaResponse = await response.json();
   const pools: Pool[] = [];
 
-  for (const p of result.data) {
-    const chain = p.chain.toLowerCase();
+  for (const p of poolsData.data) {
+    const chain = normalizeChain(p.chain);
     if (!SUPPORTED_CHAINS.has(chain)) continue;
-    if (!LENDING_CATEGORIES.has(p.category?.toLowerCase())) continue;
 
-    const apyBaseBorrow = p.apyBaseBorrow ?? 0;
-    const apyRewardBorrow = p.apyRewardBorrow ?? 0;
+    // Only include pools that appear in the lendBorrow endpoint
+    const borrow = borrowMap.get(p.pool);
+    if (!borrow) continue;
+
+    const apyBaseBorrow = borrow.apyBaseBorrow ?? 0;
+    const apyRewardBorrow = borrow.apyRewardBorrow ?? 0;
 
     pools.push({
       id: p.pool,
@@ -43,8 +72,9 @@ export async function fetchLendingPools(): Promise<Pool[]> {
       apyBaseBorrow,
       apyRewardBorrow,
       apyBorrow: apyBaseBorrow + apyRewardBorrow,
-      ltv: p.ltv ?? 0,
-      category: p.category,
+      ltv: borrow.ltv ?? 0,
+      totalSupplyUsd: borrow.totalSupplyUsd ?? p.tvlUsd,
+      totalBorrowUsd: borrow.totalBorrowUsd ?? 0,
       stablecoin: p.stablecoin,
     });
   }
@@ -52,4 +82,4 @@ export async function fetchLendingPools(): Promise<Pool[]> {
   return pools;
 }
 
-export { SUPPORTED_CHAINS };
+export { SUPPORTED_CHAINS, normalizeChain };

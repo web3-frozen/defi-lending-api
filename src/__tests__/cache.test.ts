@@ -16,7 +16,8 @@ const mockPools: Pool[] = [
     apyRewardBorrow: 0,
     apyBorrow: 5.0,
     ltv: 0.8,
-    category: "lending",
+    totalSupplyUsd: 1_000_000,
+    totalBorrowUsd: 600_000,
     stablecoin: true,
   },
   {
@@ -32,7 +33,8 @@ const mockPools: Pool[] = [
     apyRewardBorrow: 0,
     apyBorrow: 8.0,
     ltv: 0.65,
-    category: "lending",
+    totalSupplyUsd: 500_000,
+    totalBorrowUsd: 200_000,
     stablecoin: false,
   },
 ];

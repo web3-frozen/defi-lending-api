@@ -12,7 +12,8 @@ export interface Pool {
   apyRewardBorrow: number;
   apyBorrow: number;
   ltv: number;
-  category: string;
+  totalSupplyUsd: number;
+  totalBorrowUsd: number;
   stablecoin: boolean;
 }
 
@@ -50,14 +51,21 @@ export interface LlamaPool {
   apy: number;
   apyBase: number | null;
   apyReward: number | null;
-  apyBaseBorrow: number | null;
-  apyRewardBorrow: number | null;
-  ltv: number | null;
-  category: string;
   stablecoin: boolean;
 }
 
-export interface LlamaResponse {
+export interface LlamaPoolsResponse {
   status: string;
   data: LlamaPool[];
+}
+
+/** Raw entry from DeFiLlama /lendBorrow endpoint. */
+export interface LlamaBorrowEntry {
+  pool: string;
+  apyBaseBorrow: number | null;
+  apyRewardBorrow: number | null;
+  totalSupplyUsd: number | null;
+  totalBorrowUsd: number | null;
+  ltv: number | null;
+  borrowable: boolean | null;
 }
