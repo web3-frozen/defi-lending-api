@@ -1,0 +1,23 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  packages: write
+  security-events: write
+  id-token: write
+
+jobs:
+  ci:
+    uses: web3-frozen/homelab-apps/.github/workflows/ci-container.yaml@main
+    with:
+      app-name: defi-lending-api
+      image-name: defi-lending-api
+      workload-dir: workloads/defi-lending
+      node-version: "22"
+    secrets: inherit
