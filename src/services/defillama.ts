@@ -1,7 +1,9 @@
 import type { Pool, LlamaPoolsResponse, LlamaBorrowEntry } from "../types/index.js";
+import { recordExternalRequest } from "../metrics.js";
 
 const POOLS_URL = "https://yields.llama.fi/pools";
 const LEND_BORROW_URL = "https://yields.llama.fi/lendBorrow";
+const PROVIDER = "defillama";
 
 const SUPPORTED_CHAINS = new Set([
   "ethereum",
@@ -25,14 +27,41 @@ function normalizeChain(raw: string): string {
   return lower;
 }
 
+async function fetchExternal(operation: string, url: string): Promise<Response> {
+  const start = process.hrtime.bigint();
+
+  try {
+    const response = await fetch(url);
+    const durationSeconds =
+      Number(process.hrtime.bigint() - start) / 1_000_000_000;
+    recordExternalRequest(
+      PROVIDER,
+      operation,
+      response.ok ? "success" : "http_error",
+      durationSeconds
+    );
+    return response;
+  } catch (error) {
+    const durationSeconds =
+      Number(process.hrtime.bigint() - start) / 1_000_000_000;
+    recordExternalRequest(
+      PROVIDER,
+      operation,
+      "network_error",
+      durationSeconds
+    );
+    throw error;
+  }
+}
+
 /**
  * Fetches lending pools by joining /pools and /lendBorrow endpoints.
  * A pool is considered a lending pool if it appears in /lendBorrow.
  */
 export async function fetchLendingPools(): Promise<Pool[]> {
   const [poolsRes, borrowRes] = await Promise.all([
-    fetch(POOLS_URL),
-    fetch(LEND_BORROW_URL),
+    fetchExternal("pools", POOLS_URL),
+    fetchExternal("lend_borrow", LEND_BORROW_URL),
   ]);
 
   if (!poolsRes.ok) throw new Error(`DeFiLlama /pools returned ${poolsRes.status}`);

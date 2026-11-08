@@ -1,4 +1,9 @@
 import type { Pool } from "../types/index.js";
+import {
+  cacheLastSuccess,
+  cacheReady,
+  cacheRefreshDuration,
+} from "../metrics.js";
 
 export class PoolCache {
   private pools: Pool[] = [];
@@ -45,11 +50,25 @@ export class PoolCache {
   private async refresh(): Promise<void> {
     if (this.refreshing) return;
     this.refreshing = true;
+    const start = process.hrtime.bigint();
 
     try {
       this.pools = await this.fetcher();
       this.updatedAt = Date.now();
+      cacheReady.set(1);
+      cacheLastSuccess.set(this.updatedAt / 1000);
+      cacheRefreshDuration.observe(
+        { outcome: "success" },
+        Number(process.hrtime.bigint() - start) / 1_000_000_000
+      );
       console.log(`Cache refreshed: ${this.pools.length} pools`);
+    } catch (error) {
+      cacheReady.set(this.updatedAt > 0 ? 1 : 0);
+      cacheRefreshDuration.observe(
+        { outcome: "error" },
+        Number(process.hrtime.bigint() - start) / 1_000_000_000
+      );
+      throw error;
     } finally {
       this.refreshing = false;
     }
