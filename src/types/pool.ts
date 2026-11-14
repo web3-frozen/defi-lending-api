@@ -5,11 +5,11 @@ export interface Pool {
   project: string;
   symbol: string;
   tvl: number;
-  apyBase: number;
-  apyReward: number;
+  apyBase: number | null;
+  apyReward: number | null;
   apy: number;
-  apyBaseBorrow: number;
-  apyRewardBorrow: number;
+  apyBaseBorrow: number | null;
+  apyRewardBorrow: number | null;
   apyBorrow: number;
   ltv: number;
   totalSupplyUsd: number;
@@ -27,6 +27,11 @@ export interface ChainInfo {
   poolCount: number;
 }
 
+export interface SymbolInfo {
+  symbol: string;
+  poolCount: number;
+}
+
 export interface ProtocolInfo {
   name: string;
   totalTvl: number;
@@ -35,6 +40,8 @@ export interface ProtocolInfo {
 export interface QueryParams {
   chain?: string;
   project?: string;
+  symbol?: string;
+  stablecoin?: boolean;
   sortBy: "tvl" | "apy" | "apyBorrow" | "ltv";
   order: "asc" | "desc";
   limit: number;
@@ -48,7 +55,7 @@ export interface LlamaPool {
   project: string;
   symbol: string;
   tvlUsd: number;
-  apy: number;
+  apy: number | null;
   apyBase: number | null;
   apyReward: number | null;
   stablecoin: boolean;

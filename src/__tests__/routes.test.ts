@@ -103,6 +103,33 @@ describe("Pool Routes", () => {
     expect(res.body.data.every((p: Pool) => p.tvl >= 1_000_000)).toBe(true);
   });
 
+  it("GET /api/pools?symbol=usdc filters by asset name", async () => {
+    const res = await request(app).get("/api/pools?symbol=usdc");
+    expect(res.status).toBe(200);
+    expect(res.body.data).toHaveLength(1);
+    expect(res.body.data[0].symbol).toBe("USDC");
+  });
+
+  it("GET /api/pools?stablecoin=true keeps stablecoins only", async () => {
+    const res = await request(app).get("/api/pools?stablecoin=true");
+    expect(res.status).toBe(200);
+    expect(res.body.data.every((p: Pool) => p.stablecoin)).toBe(true);
+    expect(res.body.data).toHaveLength(1);
+  });
+
+  it("GET /api/pools?stablecoin=false excludes stablecoins", async () => {
+    const res = await request(app).get("/api/pools?stablecoin=false");
+    expect(res.status).toBe(200);
+    expect(res.body.data.every((p: Pool) => !p.stablecoin)).toBe(true);
+    expect(res.body.data).toHaveLength(2);
+  });
+
+  it("GET /api/symbols returns asset counts", async () => {
+    const res = await request(app).get("/api/symbols");
+    expect(res.status).toBe(200);
+    expect(res.body.data.some((item: { symbol: string; poolCount: number }) => item.symbol === "USDC" && item.poolCount === 1)).toBe(true);
+  });
+
   it("GET /api/chains returns chain info", async () => {
     const res = await request(app).get("/api/chains");
     expect(res.status).toBe(200);
