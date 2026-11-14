@@ -3,6 +3,10 @@ export interface Pool {
   id: string;
   chain: string;
   project: string;
+  protocolName?: string;
+  protocolUrl?: string;
+  protocolTwitter?: string;
+  protocolGithub?: string;
   symbol: string;
   tvl: number;
   apyBase: number | null;
@@ -41,6 +45,7 @@ export interface QueryParams {
   chain?: string;
   project?: string;
   symbol?: string;
+  symbols?: string[];
   stablecoin?: boolean;
   sortBy: "tvl" | "apy" | "apyBorrow" | "ltv";
   order: "asc" | "desc";
@@ -64,6 +69,15 @@ export interface LlamaPool {
 export interface LlamaPoolsResponse {
   status: string;
   data: LlamaPool[];
+}
+
+/** Raw protocol metadata from DeFiLlama /protocols endpoint. */
+export interface LlamaProtocol {
+  name: string;
+  slug: string;
+  url?: string | null;
+  twitter?: string | null;
+  github?: string[] | string | null;
 }
 
 /** Raw entry from DeFiLlama /lendBorrow endpoint. */

@@ -101,6 +101,7 @@ function parseQuery(req: Request): QueryParams {
   const order = String(q.order) === "asc" ? "asc" : "desc";
   const minTvl = Number(q.minTvl) || 0;
   const symbol = q.symbol ? String(q.symbol).trim().toLowerCase() : undefined;
+  const symbols = parseSymbols(q.symbols);
   const stablecoin =
     q.stablecoin === "true" ? true : q.stablecoin === "false" ? false : undefined;
 
@@ -108,12 +109,27 @@ function parseQuery(req: Request): QueryParams {
     chain: q.chain ? String(q.chain).toLowerCase() : undefined,
     project: q.project ? String(q.project).toLowerCase() : undefined,
     symbol: symbol || undefined,
+    symbols: symbols.length > 0 ? symbols : undefined,
     stablecoin,
     sortBy,
     order,
     limit,
     minTvl,
   };
+}
+
+function parseSymbols(value: unknown): string[] {
+  const values = (Array.isArray(value) ? value : [value]).filter(
+    (item) => item != null && item !== ""
+  );
+  return [
+    ...new Set(
+      values
+        .flatMap((item) => String(item).split(","))
+        .map((item) => item.trim().toLowerCase())
+        .filter(Boolean)
+    ),
+  ];
 }
 
 function matchesSymbol(symbol: string, query: string): boolean {
@@ -125,6 +141,12 @@ function filterPools(pools: Pool[], params: QueryParams): Pool[] {
     if (params.chain && p.chain !== params.chain) return false;
     if (params.project && p.project.toLowerCase() !== params.project) return false;
     if (params.symbol && !matchesSymbol(p.symbol, params.symbol)) return false;
+    if (
+      params.symbols?.length &&
+      !params.symbols.some((symbol) => p.symbol.toLowerCase() === symbol)
+    ) {
+      return false;
+    }
     if (params.stablecoin !== undefined && p.stablecoin !== params.stablecoin) return false;
     if (params.minTvl > 0 && p.tvl < params.minTvl) return false;
     return true;

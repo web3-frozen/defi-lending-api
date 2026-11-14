@@ -58,6 +58,23 @@ const mockPools: Pool[] = [
     totalBorrowUsd: 800_000,
     stablecoin: false,
   },
+  {
+    id: "pool-4",
+    chain: "ethereum",
+    project: "aave-v3",
+    symbol: "WETH",
+    tvl: 1_000_000,
+    apyBase: 1.5,
+    apyReward: 0,
+    apy: 1.5,
+    apyBaseBorrow: 2.5,
+    apyRewardBorrow: 0,
+    apyBorrow: 2.5,
+    ltv: 0.8,
+    totalSupplyUsd: 1_000_000,
+    totalBorrowUsd: 500_000,
+    stablecoin: false,
+  },
 ];
 
 function createTestApp() {
@@ -74,7 +91,7 @@ describe("Pool Routes", () => {
   it("GET /api/pools returns all pools sorted by TVL desc", async () => {
     const res = await request(app).get("/api/pools");
     expect(res.status).toBe(200);
-    expect(res.body.data).toHaveLength(3);
+    expect(res.body.data).toHaveLength(4);
     expect(res.body.data[0].tvl).toBeGreaterThanOrEqual(res.body.data[1].tvl);
   });
 
@@ -82,7 +99,7 @@ describe("Pool Routes", () => {
     const res = await request(app).get("/api/pools?chain=ethereum");
     expect(res.status).toBe(200);
     expect(res.body.data.every((p: Pool) => p.chain === "ethereum")).toBe(true);
-    expect(res.body.data).toHaveLength(2);
+    expect(res.body.data).toHaveLength(3);
   });
 
   it("GET /api/pools?sort=apy&order=asc sorts ascending", async () => {
@@ -110,6 +127,21 @@ describe("Pool Routes", () => {
     expect(res.body.data[0].symbol).toBe("USDC");
   });
 
+  it("GET /api/pools with repeated symbols params keeps multiple assets", async () => {
+    const res = await request(app).get("/api/pools?symbols=usdc&symbols=eth");
+    expect(res.status).toBe(200);
+    expect(res.body.data).toHaveLength(2);
+    expect(res.body.data.map((p: Pool) => p.symbol).sort()).toEqual(["ETH", "USDC"]);
+  });
+
+  it("GET /api/pools accepts comma-separated symbols with exact matching", async () => {
+    const res = await request(app).get("/api/pools?symbols=usdc,eth");
+    expect(res.status).toBe(200);
+    expect(res.body.data).toHaveLength(2);
+    expect(res.body.data.map((p: Pool) => p.symbol).sort()).toEqual(["ETH", "USDC"]);
+    expect(res.body.data.some((p: Pool) => p.symbol === "WETH")).toBe(false);
+  });
+
   it("GET /api/pools?stablecoin=true keeps stablecoins only", async () => {
     const res = await request(app).get("/api/pools?stablecoin=true");
     expect(res.status).toBe(200);
@@ -121,7 +153,7 @@ describe("Pool Routes", () => {
     const res = await request(app).get("/api/pools?stablecoin=false");
     expect(res.status).toBe(200);
     expect(res.body.data.every((p: Pool) => !p.stablecoin)).toBe(true);
-    expect(res.body.data).toHaveLength(2);
+    expect(res.body.data).toHaveLength(3);
   });
 
   it("GET /api/symbols returns asset counts", async () => {
