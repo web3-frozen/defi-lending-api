@@ -1,37 +1,13 @@
 name: Publish image
 
+# Retired. Do not run this on ubuntu-latest.
+# Image builds go through ci.yaml on the Argo CD runner homelab-defi-lending-api.
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-
-permissions:
-  contents: read
-  packages: write
 
 jobs:
-  publish:
-    name: Publish on GitHub-hosted runner
-    runs-on: ubuntu-latest
+  retired:
+    if: false
+    runs-on: homelab-defi-lending-api
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-
-      - name: Short tag
-        id: tag
-        run: echo "short=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
-
-      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069
-
-      - name: Login to GHCR
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-
-      - name: Build and push
-        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc
-        with:
-          context: .
-          push: true
-          provenance: false
-          sbom: false
-          tags: |
-            ghcr.io/web3-frozen/defi-lending-api:${{ steps.tag.outputs.short }}
-            ghcr.io/web3-frozen/defi-lending-api:latest
+      - run: echo "Retired. Use ci.yaml."
