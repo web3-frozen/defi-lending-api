@@ -107,6 +107,7 @@ export async function fetchLendingPools(): Promise<Pool[]> {
       apyBase: supply.base,
       apyReward: supply.reward,
       apy: supply.total,
+      apyMean30d: p.apyMean30d ?? null,
       apyBaseBorrow: borrowParts.base,
       apyRewardBorrow: borrowParts.reward,
       apyBorrow: borrowParts.total,

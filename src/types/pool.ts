@@ -12,6 +12,7 @@ export interface Pool {
   apyBase: number | null;
   apyReward: number | null;
   apy: number;
+  apyMean30d?: number | null;
   apyBaseBorrow: number | null;
   apyRewardBorrow: number | null;
   apyBorrow: number;
@@ -47,7 +48,7 @@ export interface QueryParams {
   symbol?: string;
   symbols?: string[];
   stablecoin?: boolean;
-  sortBy: "tvl" | "apy" | "apyBorrow" | "ltv";
+  sortBy: "tvl" | "apy" | "apyMean30d" | "apyBorrow" | "ltv";
   order: "asc" | "desc";
   limit: number;
   minTvl: number;
@@ -63,6 +64,7 @@ export interface LlamaPool {
   apy: number | null;
   apyBase: number | null;
   apyReward: number | null;
+  apyMean30d?: number | null;
   stablecoin: boolean;
 }
 

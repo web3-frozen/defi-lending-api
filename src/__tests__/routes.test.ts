@@ -16,6 +16,7 @@ const mockPools: Pool[] = [
     apyBase: 3.5,
     apyReward: 0.5,
     apy: 4.0,
+    apyMean30d: 4.0,
     apyBaseBorrow: 5.0,
     apyRewardBorrow: 0,
     apyBorrow: 5.0,
@@ -33,6 +34,7 @@ const mockPools: Pool[] = [
     apyBase: 6.0,
     apyReward: 1.0,
     apy: 7.0,
+    apyMean30d: 7.0,
     apyBaseBorrow: 8.0,
     apyRewardBorrow: 0,
     apyBorrow: 8.0,
@@ -50,6 +52,7 @@ const mockPools: Pool[] = [
     apyBase: 2.0,
     apyReward: 0.3,
     apy: 2.3,
+    apyMean30d: 2.3,
     apyBaseBorrow: 4.5,
     apyRewardBorrow: 0,
     apyBorrow: 4.5,
@@ -67,6 +70,7 @@ const mockPools: Pool[] = [
     apyBase: 1.5,
     apyReward: 0,
     apy: 1.5,
+    apyMean30d: 1.5,
     apyBaseBorrow: 2.5,
     apyRewardBorrow: 0,
     apyBorrow: 2.5,
@@ -106,6 +110,15 @@ describe("Pool Routes", () => {
     const res = await request(app).get("/api/pools?sort=apy&order=asc");
     expect(res.status).toBe(200);
     expect(res.body.data[0].apy).toBeLessThanOrEqual(res.body.data[1].apy);
+  });
+
+  it("GET /api/pools?sort=apyMean30d&order=asc sorts by 30-day average", async () => {
+    const res = await request(app).get("/api/pools?sort=apyMean30d&order=asc");
+    expect(res.status).toBe(200);
+    expect(res.body.data[0].apyMean30d).toBeLessThanOrEqual(
+      res.body.data[1].apyMean30d
+    );
+    expect(res.body.data[0].symbol).toBe("WETH");
   });
 
   it("GET /api/pools?limit=1 limits results", async () => {
