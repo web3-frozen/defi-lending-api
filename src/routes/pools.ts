@@ -94,7 +94,7 @@ function parseQuery(req: Request): QueryParams {
   if (limit > MAX_LIMIT) limit = MAX_LIMIT;
   if (limit < 1) limit = DEFAULT_LIMIT;
 
-  const sortBy = (["tvl", "apy", "apyBorrow", "ltv"].includes(String(q.sort))
+  const sortBy = (["tvl", "apy", "apyMean30d", "apyBorrow", "ltv"].includes(String(q.sort))
     ? String(q.sort)
     : "tvl") as QueryParams["sortBy"];
 
